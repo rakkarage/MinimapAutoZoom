@@ -1,0 +1,11 @@
+## Interface: 120000
+## Version: v2026
+## Title: MinimapAutoZoom
+## Category: User Interface
+## Notes: Automatically zooms out the minimap after a configurable delay.
+## Author: rakkarage
+## SavedVariables: MinimapAutoZoomDB
+## AddonCompartmentFunc: MinimapAutoZoom_AddonCompartmentClick
+## IconTexture: Interface/AddOns/MinimapAutoZoom/MinimapAutoZoom.png
+
+MinimapAutoZoom.lua

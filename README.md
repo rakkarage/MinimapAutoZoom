@@ -1,0 +1,3 @@
+# 🗺️ MinimapAutoZoom
+
+Thanks!
