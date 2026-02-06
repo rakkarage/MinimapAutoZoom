@@ -20,6 +20,11 @@ function MAZ:ADDON_LOADED(event, name)
 		end
 		self:InitializeOptions()
 		self:InitializeZoomHooks()
+
+		C_Timer.After(1, function()
+			MAZ:OnMinimapZoomChanged()
+		end)
+		
 		self:UnregisterEvent(event)
 	end
 end
