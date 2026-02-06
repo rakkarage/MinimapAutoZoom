@@ -1,105 +1,108 @@
--- MinimapAutoZoom: Automatically zooms out the minimap after a configurable delay
+MAZ = CreateFrame("Frame")
+MAZ.name = "MinimapAutoZoom"
+MAZ.defaults = { delay = 3, combat = true }
+MAZ.zoomTimer = nil
 
-local addonName = "MinimapAutoZoom"
-local MAZ = CreateFrame("Frame")
-local zoomTimer = nil
-local defaultDelay = 3 -- seconds
-
--- Saved variables (will persist between sessions)
-MinimapAutoZoomDB = MinimapAutoZoomDB or {
-    enabled = true,
-    delay = defaultDelay
-}
-
--- Function to zoom out to maximum
-local function ZoomOutToMax()
-    Minimap:SetZoom(0) -- 0 is maximum zoom out in WoW
-    zoomTimer = nil
+function MAZ:OnEvent(event, ...)
+	self[event](self, event, ...)
 end
 
--- Function to start/reset the zoom-out timer
-local function StartZoomTimer()
-    if not MinimapAutoZoomDB.enabled then return end
-    
-    -- Cancel existing timer if it exists
-    if zoomTimer then
-        zoomTimer:Cancel()
-    end
-    
-    -- Create new timer
-    zoomTimer = C_Timer.NewTimer(MinimapAutoZoomDB.delay, ZoomOutToMax)
+MAZ:SetScript("OnEvent", MAZ.OnEvent)
+MAZ:RegisterEvent("ADDON_LOADED")
+
+function MAZ:ADDON_LOADED(event, name)
+	if name == MAZ.name then
+		MinimapAutoZoomDB = MinimapAutoZoomDB or {}
+		for key, value in pairs(self.defaults) do
+			if MinimapAutoZoomDB[key] == nil then
+				MinimapAutoZoomDB[key] = value
+			end
+		end
+		self:InitializeOptions()
+		self:InitializeZoomHooks()
+		self:UnregisterEvent(event)
+	end
 end
 
--- Hook into minimap zoom changes
-local function OnMinimapZoomChanged()
-    local currentZoom = Minimap:GetZoom()
-    
-    -- Only start timer if we're zoomed in (not at max zoom out)
-    if currentZoom > 0 then
-        StartZoomTimer()
-    else
-        -- If already at max zoom out, cancel any pending timer
-        if zoomTimer then
-            zoomTimer:Cancel()
-            zoomTimer = nil
-        end
-    end
+function MAZ:ZoomOutToMax()
+	Minimap:SetZoom(0)
+	self.zoomTimer = nil
 end
 
--- Hook the minimap's zoom in/out functions
-hooksecurefunc(Minimap, "SetZoom", OnMinimapZoomChanged)
-
--- Also hook mouse wheel zoom
-Minimap:HookScript("OnMouseWheel", function(self, delta)
-    -- Small delay to let the zoom change register
-    C_Timer.After(0.1, OnMinimapZoomChanged)
-end)
-
--- Slash commands
-SLASH_MINIMAPAUTOZOOM1 = "/maz"
-SLASH_MINIMAPAUTOZOOM2 = "/minimapautoZoom"
-
-SlashCmdList["MINIMAPAUTOZOOM"] = function(msg)
-    msg = string.lower(msg)
-    
-    if msg == "on" or msg == "enable" then
-        MinimapAutoZoomDB.enabled = true
-        print("|cff00ff00MinimapAutoZoom:|r Enabled")
-        
-    elseif msg == "off" or msg == "disable" then
-        MinimapAutoZoomDB.enabled = false
-        if zoomTimer then
-            zoomTimer:Cancel()
-            zoomTimer = nil
-        end
-        print("|cffff0000MinimapAutoZoom:|r Disabled")
-        
-    elseif msg == "status" then
-        print("|cff00ff00MinimapAutoZoom:|r " .. (MinimapAutoZoomDB.enabled and "Enabled" or "Disabled"))
-        print("Delay: " .. MinimapAutoZoomDB.delay .. " seconds")
-        
-    elseif msg:match("^delay%s+(%d+%.?%d*)$") then
-        local delay = tonumber(msg:match("^delay%s+(%d+%.?%d*)$"))
-        if delay and delay > 0 and delay <= 30 then
-            MinimapAutoZoomDB.delay = delay
-            print("|cff00ff00MinimapAutoZoom:|r Delay set to " .. delay .. " seconds")
-        else
-            print("|cffff0000MinimapAutoZoom:|r Please enter a delay between 0.1 and 30 seconds")
-        end
-        
-    else
-        print("|cff00ff00MinimapAutoZoom Commands:|r")
-        print("/maz on|off - Enable/disable auto zoom-out")
-        print("/maz delay <seconds> - Set delay (0.1-30 seconds)")
-        print("/maz status - Show current settings")
-    end
+function MAZ:StartZoomTimer()
+	if not MinimapAutoZoomDB.combat and InCombatLockdown() then return end
+	
+	if self.zoomTimer then
+		self.zoomTimer:Cancel()
+	end
+	
+	self.zoomTimer = C_Timer.NewTimer(MinimapAutoZoomDB.delay, function()
+		MAZ:ZoomOutToMax()
+	end)
 end
 
--- Initialization message
-MAZ:RegisterEvent("PLAYER_LOGIN")
-MAZ:SetScript("OnEvent", function(self, event)
-    if event == "PLAYER_LOGIN" then
-        print("|cff00ff00MinimapAutoZoom|r loaded! Type /maz for commands")
-        print("Current delay: " .. MinimapAutoZoomDB.delay .. " seconds")
-    end
-end)
+function MAZ:OnMinimapZoomChanged()
+	if not MinimapAutoZoomDB.combat and InCombatLockdown() then return end
+	
+	local currentZoom = Minimap:GetZoom()
+	
+	if currentZoom > 0 then
+		self:StartZoomTimer()
+	else
+		if self.zoomTimer then
+			self.zoomTimer:Cancel()
+			self.zoomTimer = nil
+		end
+	end
+end
+
+function MAZ:InitializeZoomHooks()
+	hooksecurefunc(Minimap, "SetZoom", function()
+		MAZ:OnMinimapZoomChanged()
+	end)
+	
+	Minimap:HookScript("OnMouseWheel", function(self, delta)
+		C_Timer.After(0.1, function()
+			MAZ:OnMinimapZoomChanged()
+		end)
+	end)
+end
+
+SLASH_MAZ1 = "/maz"
+SLASH_MAZ2 = "/minimapautoZoom"
+SlashCmdList["MAZ"] = function(msg, editFrame, noOutput)
+	MAZ_Settings()
+end
+
+function MinimapAutoZoom_AddonCompartmentClick(addonName, buttonName, menuButtonFrame)
+	if addonName == "MinimapAutoZoom" then
+		MAZ_Settings()
+	end
+end
+
+function MAZ_Settings()
+	if not InCombatLockdown() then
+		Settings.OpenToCategory(MAZ.category:GetID())
+	else
+		print("MinimapAutoZoom: Cannot open settings while in combat!")
+	end
+end
+
+function MAZ:InitializeOptions()
+	local category, layout = Settings.RegisterVerticalLayoutCategory(MAZ.name)
+	MAZ.category = category
+	Settings.RegisterAddOnCategory(category)
+	
+	local sliderOptions = Settings.CreateSliderOptions(0.1, 30, 0.1)
+	sliderOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+		return string.format("%.1f sec", value)
+	end)
+	
+	Settings.CreateSlider(category,
+		Settings.RegisterAddOnSetting(category, "Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Auto Zoom-Out Delay", MAZ.defaults.delay),
+		sliderOptions, "Delay before automatically zooming out minimap")
+	
+	Settings.CreateCheckbox(category,
+		Settings.RegisterAddOnSetting(category, "Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Active in combat", MAZ.defaults.combat),
+		"Allow auto zoom-out during combat")
+end
