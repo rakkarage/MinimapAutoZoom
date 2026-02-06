@@ -69,7 +69,7 @@ function MAZ:InitializeZoomHooks()
 end
 
 SLASH_MAZ1 = "/maz"
-SLASH_MAZ2 = "/minimapautoZoom"
+SLASH_MAZ2 = "/minimapautozoom"
 SlashCmdList["MAZ"] = function(msg, editFrame, noOutput)
 	MAZ_Settings()
 end
@@ -99,10 +99,10 @@ function MAZ:InitializeOptions()
 	end)
 	
 	Settings.CreateSlider(category,
-		Settings.RegisterAddOnSetting(category, "Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Auto Zoom-Out Delay", MAZ.defaults.delay),
+		Settings.RegisterAddOnSetting(category, "MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Auto Zoom-Out Delay", MAZ.defaults.delay),
 		sliderOptions, "Delay before automatically zooming out minimap")
 	
 	Settings.CreateCheckbox(category,
-		Settings.RegisterAddOnSetting(category, "Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Active in combat", MAZ.defaults.combat),
+		Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Active in combat", MAZ.defaults.combat),
 		"Allow auto zoom-out during combat")
 end
