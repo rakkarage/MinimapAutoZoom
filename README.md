@@ -4,6 +4,11 @@
 
 Automatically zooms out the minimap after a configurable delay.
 
+This allows a fully zoomed out minimap to become the new default state.
+
+- Never need to realize you forgot to zoom out again.
+- Never need to zoom out manually again.
+
 ## Usage
 
 - (Optional) Open settings:
