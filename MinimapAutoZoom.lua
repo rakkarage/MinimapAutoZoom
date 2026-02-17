@@ -24,7 +24,7 @@ function MAZ:ADDON_LOADED(event, name)
 		C_Timer.After(1, function()
 			MAZ:OnMinimapZoomChanged()
 		end)
-		
+
 		self:UnregisterEvent(event)
 	end
 end
@@ -36,11 +36,11 @@ end
 
 function MAZ:StartZoomTimer()
 	if not MinimapAutoZoomDB.combat and InCombatLockdown() then return end
-	
+
 	if self.zoomTimer then
 		self.zoomTimer:Cancel()
 	end
-	
+
 	self.zoomTimer = C_Timer.NewTimer(MinimapAutoZoomDB.delay, function()
 		MAZ:ZoomOutToMax()
 	end)
@@ -48,9 +48,9 @@ end
 
 function MAZ:OnMinimapZoomChanged()
 	if not MinimapAutoZoomDB.combat and InCombatLockdown() then return end
-	
+
 	local currentZoom = Minimap:GetZoom()
-	
+
 	if currentZoom > 0 then
 		self:StartZoomTimer()
 	else
@@ -65,7 +65,7 @@ function MAZ:InitializeZoomHooks()
 	hooksecurefunc(Minimap, "SetZoom", function()
 		MAZ:OnMinimapZoomChanged()
 	end)
-	
+
 	Minimap:HookScript("OnMouseWheel", function(self, delta)
 		C_Timer.After(0.1, function()
 			MAZ:OnMinimapZoomChanged()
@@ -75,9 +75,7 @@ end
 
 SLASH_MAZ1 = "/maz"
 SLASH_MAZ2 = "/minimapautozoom"
-SlashCmdList["MAZ"] = function(msg, editFrame, noOutput)
-	MAZ_Settings()
-end
+SlashCmdList["MAZ"] = MAZ_Settings()
 
 function MinimapAutoZoom_AddonCompartmentClick(addonName, buttonName, menuButtonFrame)
 	if addonName == "MinimapAutoZoom" then
@@ -88,8 +86,6 @@ end
 function MAZ_Settings()
 	if not InCombatLockdown() then
 		Settings.OpenToCategory(MAZ.category:GetID())
-	else
-		print("MinimapAutoZoom: Cannot open settings while in combat!")
 	end
 end
 
@@ -97,17 +93,19 @@ function MAZ:InitializeOptions()
 	local category, layout = Settings.RegisterVerticalLayoutCategory(MAZ.name)
 	MAZ.category = category
 	Settings.RegisterAddOnCategory(category)
-	
+
 	local sliderOptions = Settings.CreateSliderOptions(0.1, 30, 0.1)
 	sliderOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
 		return string.format("%.1f sec", value)
 	end)
-	
+
 	Settings.CreateSlider(category,
-		Settings.RegisterAddOnSetting(category, "MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Auto Zoom-Out Delay", MAZ.defaults.delay),
+		Settings.RegisterAddOnSetting(category, "MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number,
+			"Auto Zoom-Out Delay", MAZ.defaults.delay),
 		sliderOptions, "Delay before automatically zooming out minimap")
-	
+
 	Settings.CreateCheckbox(category,
-		Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Active in combat", MAZ.defaults.combat),
+	Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean,
+			"Active in combat", MAZ.defaults.combat),
 		"Allow auto zoom-out during combat")
 end
