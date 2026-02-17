@@ -75,7 +75,7 @@ end
 
 SLASH_MAZ1 = "/maz"
 SLASH_MAZ2 = "/minimapautozoom"
-SlashCmdList["MAZ"] = MAZ_Settings()
+SlashCmdList["MAZ"] = MAZ_Settings
 
 function MinimapAutoZoom_AddonCompartmentClick(addonName, buttonName, menuButtonFrame)
 	if addonName == "MinimapAutoZoom" then
