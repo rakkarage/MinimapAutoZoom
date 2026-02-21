@@ -4,7 +4,9 @@ MAZ.defaults = { delay = 3, combat = true }
 MAZ.zoomTimer = nil
 
 function MAZ:OnEvent(event, ...)
-	self[event](self, event, ...)
+	if self[event] then
+		self[event](self, event, ...)
+	end
 end
 
 MAZ:SetScript("OnEvent", MAZ.OnEvent)
@@ -105,7 +107,7 @@ function MAZ:InitializeOptions()
 		sliderOptions, "Delay before automatically zooming out minimap")
 
 	Settings.CreateCheckbox(category,
-	Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean,
+		Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean,
 			"Active in combat", MAZ.defaults.combat),
 		"Allow auto zoom-out during combat")
 end
