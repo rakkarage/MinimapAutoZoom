@@ -73,9 +73,11 @@ function MAZ:InitializeZoomHooks()
 	end)
 end
 
-SLASH_MAZ1 = "/maz"
-SLASH_MAZ2 = "/minimapautozoom"
-SlashCmdList["MAZ"] = MAZ_Settings
+function MAZ_Settings()
+	if not InCombatLockdown() then
+		Settings.OpenToCategory(MAZ.category:GetID())
+	end
+end
 
 function MinimapAutoZoom_AddonCompartmentClick(addonName, buttonName, menuButtonFrame)
 	if addonName == "MinimapAutoZoom" then
@@ -83,11 +85,9 @@ function MinimapAutoZoom_AddonCompartmentClick(addonName, buttonName, menuButton
 	end
 end
 
-function MAZ_Settings()
-	if not InCombatLockdown() then
-		Settings.OpenToCategory(MAZ.category:GetID())
-	end
-end
+SLASH_MAZ1 = "/maz"
+SLASH_MAZ2 = "/minimapautozoom"
+SlashCmdList["MAZ"] = MAZ_Settings
 
 function MAZ:InitializeOptions()
 	local category, layout = Settings.RegisterVerticalLayoutCategory(MAZ.name)
