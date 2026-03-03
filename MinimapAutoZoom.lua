@@ -1,6 +1,6 @@
 MAZ = CreateFrame("Frame")
 MAZ.name = "MinimapAutoZoom"
-MAZ.defaults = { delay = 3, combat = true }
+MAZ.defaults = { delay = 10, combat = true }
 MAZ.zoomTimer = nil
 
 function MAZ:OnEvent(event, ...)
