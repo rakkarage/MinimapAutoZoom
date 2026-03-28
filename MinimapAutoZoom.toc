@@ -5,7 +5,7 @@
 ## Notes: Automatically zooms out the minimap after a configurable delay.
 ## Author: rakkarage
 ## SavedVariables: MinimapAutoZoomDB
-## AddonCompartmentFunc: MinimapAutoZoom_AddonCompartmentClick
+## AddonCompartmentFunc: MAZ_Settings
 ## IconTexture: Interface/AddOns/MinimapAutoZoom/MinimapAutoZoom.png
 
 MinimapAutoZoom.lua

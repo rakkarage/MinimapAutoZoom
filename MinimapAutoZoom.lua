@@ -137,13 +137,11 @@ function MAZ:InitializeOptions()
 		MinimalSliderWithSteppersMixin.Label.Right,
 		function(value) return string.format("%.1f sec", value) end
 	)
-	Settings.CreateSlider(
-		category,
+	Settings.CreateSlider(category,
 		Settings.RegisterAddOnSetting(category, "MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number,
 			"Auto Zoom-Out Delay", MAZ.defaults.delay), sliderOptions, "Delay before automatically zooming out minimap"
 	)
-	Settings.CreateCheckbox(
-		category,
+	Settings.CreateCheckbox(category,
 		Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean,
 			"Active in combat", MAZ.defaults.combat), "Allow auto zoom-out during combat"
 	)
@@ -151,10 +149,6 @@ end
 
 function MAZ_Settings()
 	if not InCombatLockdown() then Settings.OpenToCategory(MAZ.category:GetID()) end
-end
-
-function MinimapAutoZoom_AddonCompartmentClick(addonName, buttonName, menuButtonFrame)
-	if addonName == "MinimapAutoZoom" then MAZ_Settings() end
 end
 
 SLASH_MAZ1 = "/maz"
