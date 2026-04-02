@@ -4,7 +4,7 @@
 
 --#region Setup
 MAZ = CreateFrame("Frame")
-MAZ.name = "MinimapAutoZoom"
+MAZ.name = ...
 MAZ.defaults = { delay = 10, combat = true }
 MAZ.zoomTimer = nil
 MAZ.pendingZoomOut = false -- true if zoom-out was blocked (e.g. in combat)
