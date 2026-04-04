@@ -130,18 +130,17 @@ function MAZ:InitializeOptions()
 	local category = Settings.RegisterVerticalLayoutCategory(MAZ.name)
 	MAZ.category = category
 
-	local delaySetting = Settings.RegisterAddOnSetting(category, "MAZ_Delay", "delay", MinimapAutoZoomDB,
-		Settings.VarType.Number, "Zoom-Out Delay", MAZ.defaults.delay)
+	local delaySetting = Settings.RegisterAddOnSetting(category,
+		"MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Zoom-Out Delay", MAZ.defaults.delay)
 	local delayOptions = Settings.CreateSliderOptions(0.1, 30, 0.1)
 	delayOptions:SetLabelFormatter(
 		MinimalSliderWithSteppersMixin.Label.Right,
 		function(value) return string.format("%.1f sec", value) end
 	)
-	Settings.CreateSlider(category, delaySetting, delayOptions,
-		"How long after zooming in before the minimap resets.")
+	Settings.CreateSlider(category, delaySetting, delayOptions, "How long after zooming in before the minimap resets.")
 
-	local combatSetting = Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB,
-		Settings.VarType.Boolean, "Allow in Combat", MAZ.defaults.combat)
+	local combatSetting = Settings.RegisterAddOnSetting(category,
+		"MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Allow in Combat", MAZ.defaults.combat)
 	Settings.CreateCheckbox(category, combatSetting, "Zoom out automatically while in combat.")
 
 	Settings.RegisterAddOnCategory(category)
