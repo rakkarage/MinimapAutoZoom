@@ -28,7 +28,6 @@ function MAZ:ADDON_LOADED(event, name)
 
 	self:InitializeOptions()
 	self:InitializeZoomHooks()
-
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -130,21 +129,22 @@ end
 function MAZ:InitializeOptions()
 	local category = Settings.RegisterVerticalLayoutCategory(MAZ.name)
 	MAZ.category = category
-	Settings.RegisterAddOnCategory(category)
 
-	local sliderOptions = Settings.CreateSliderOptions(0.1, 30, 0.1)
-	sliderOptions:SetLabelFormatter(
+	local delaySetting = Settings.RegisterAddOnSetting(category, "MAZ_Delay", "delay", MinimapAutoZoomDB,
+		Settings.VarType.Number, "Zoom-Out Delay", MAZ.defaults.delay)
+	local delayOptions = Settings.CreateSliderOptions(0.1, 30, 0.1)
+	delayOptions:SetLabelFormatter(
 		MinimalSliderWithSteppersMixin.Label.Right,
 		function(value) return string.format("%.1f sec", value) end
 	)
-	Settings.CreateSlider(category,
-		Settings.RegisterAddOnSetting(category, "MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number,
-			"Auto Zoom-Out Delay", MAZ.defaults.delay), sliderOptions, "Delay before automatically zooming out minimap"
-	)
-	Settings.CreateCheckbox(category,
-		Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean,
-			"Active in combat", MAZ.defaults.combat), "Allow auto zoom-out during combat"
-	)
+	Settings.CreateSlider(category, delaySetting, delayOptions,
+		"How long after zooming in before the minimap resets.")
+
+	local combatSetting = Settings.RegisterAddOnSetting(category, "MAZ_Combat", "combat", MinimapAutoZoomDB,
+		Settings.VarType.Boolean, "Allow in Combat", MAZ.defaults.combat)
+	Settings.CreateCheckbox(category, combatSetting, "Zoom out automatically while in combat.")
+
+	Settings.RegisterAddOnCategory(category)
 end
 
 function MAZ_Settings()
