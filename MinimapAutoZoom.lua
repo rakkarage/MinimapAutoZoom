@@ -3,11 +3,13 @@
 -- Handles combat transitions, zone changes, and loading screens robustly.
 
 --#region Setup
+
 MAZ = CreateFrame("Frame")
 MAZ.name = ...
-MAZ.defaults = { delay = 10, combat = true }
+MAZ.defaults = { delay = 7, combat = true }
 MAZ.zoomTimer = nil
-MAZ.pendingZoomOut = false -- true if zoom-out was blocked (e.g. in combat)
+MAZ.pendingZoomOut = false
+MAZ.zoneChangeTimer = nil
 
 function MAZ:OnEvent(event, ...)
 	if self[event] then self[event](self, event, ...) end
@@ -34,13 +36,13 @@ function MAZ:ADDON_LOADED(event, name)
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	self:RegisterEvent("ZONE_CHANGED")
 
-	C_Timer.After(1, function() MAZ:OnMinimapZoomChanged() end)
 	self:UnregisterEvent(event)
 end
 
 --#endregion
 
 --#region Events
+
 function MAZ:PLAYER_REGEN_DISABLED()
 	if not MinimapAutoZoomDB.combat then
 		if self.zoomTimer then
@@ -67,17 +69,24 @@ function MAZ:PLAYER_ENTERING_WORLD()
 	end)
 end
 
-function MAZ:ZONE_CHANGED_NEW_AREA()
-	C_Timer.After(0.5, function() MAZ:OnMinimapZoomChanged() end)
+local function OnZoneChanged()
+	if MAZ.zoneChangeTimer then
+		MAZ.zoneChangeTimer:Cancel()
+	end
+	MAZ.zoneChangeTimer = C_Timer.NewTimer(0.5, function()
+		MAZ.zoneChangeTimer = nil
+		MAZ:OnMinimapZoomChanged()
+	end)
 end
 
-function MAZ:ZONE_CHANGED()
-	C_Timer.After(0.5, function() MAZ:OnMinimapZoomChanged() end)
-end
+function MAZ:ZONE_CHANGED_NEW_AREA() OnZoneChanged() end
+
+function MAZ:ZONE_CHANGED() OnZoneChanged() end
 
 --#endregion
 
 --#region Zoom Logic
+
 function MAZ:ZoomOutToMax()
 	self.zoomTimer = nil
 	if not MinimapAutoZoomDB.combat and InCombatLockdown() then
@@ -126,6 +135,7 @@ end
 --#endregion
 
 --#region Settings Panel
+
 function MAZ:InitializeOptions()
 	local category = Settings.RegisterVerticalLayoutCategory(MAZ.name)
 	MAZ.category = category
@@ -153,4 +163,5 @@ end
 SLASH_MAZ1 = "/maz"
 SLASH_MAZ2 = "/minimapautozoom"
 SlashCmdList["MAZ"] = MAZ_Settings
+
 --#endregion
