@@ -1,11 +1,11 @@
--- MinimapAutoZoom
--- Automatically zooms the minimap back out after a configurable delay.
--- Handles combat transitions, zone changes, and loading screens robustly.
+-- MinimapAutoZoom: Auto-zooms minimap back out after configurable delay
 
---#region Setup
+local addonName, ns = ...
 
-MAZ = CreateFrame("Frame")
-MAZ.name = ...
+ns.MAZ = CreateFrame("Frame")
+local MAZ = ns.MAZ
+MAZ.name = addonName
+
 MAZ.defaults = { delay = 7, combat = true }
 MAZ.zoomTimer = nil
 MAZ.pendingZoomOut = false
@@ -15,11 +15,8 @@ function MAZ:OnEvent(event, ...)
 	if self[event] then self[event](self, event, ...) end
 end
 
-MAZ:SetScript("OnEvent", MAZ.OnEvent)
-MAZ:RegisterEvent("ADDON_LOADED")
-
 function MAZ:ADDON_LOADED(event, name)
-	if name ~= MAZ.name then return end
+	if name ~= self.name then return end
 
 	MinimapAutoZoomDB = MinimapAutoZoomDB or {}
 	for key, value in pairs(self.defaults) do
@@ -38,10 +35,6 @@ function MAZ:ADDON_LOADED(event, name)
 
 	self:UnregisterEvent(event)
 end
-
---#endregion
-
---#region Events
 
 function MAZ:PLAYER_REGEN_DISABLED()
 	if not MinimapAutoZoomDB.combat then
@@ -69,26 +62,26 @@ function MAZ:PLAYER_ENTERING_WORLD()
 	end)
 end
 
-local function OnZoneChanged()
-	if MAZ.zoneChangeTimer then
-		MAZ.zoneChangeTimer:Cancel()
+function MAZ:ZONE_CHANGED_NEW_AREA()
+	self:OnZoneChanged()
+end
+
+function MAZ:ZONE_CHANGED()
+	self:OnZoneChanged()
+end
+
+function MAZ:OnZoneChanged()
+	if self.zoneChangeTimer then
+		self.zoneChangeTimer:Cancel()
 	end
-	MAZ.zoneChangeTimer = C_Timer.NewTimer(0.5, function()
-		MAZ.zoneChangeTimer = nil
-		MAZ:OnMinimapZoomChanged()
+	self.zoneChangeTimer = C_Timer.NewTimer(0.5, function()
+		self.zoneChangeTimer = nil
+		self:OnMinimapZoomChanged()
 	end)
 end
 
-function MAZ:ZONE_CHANGED_NEW_AREA() OnZoneChanged() end
-
-function MAZ:ZONE_CHANGED() OnZoneChanged() end
-
---#endregion
-
---#region Zoom Logic
-
 function MAZ:ZoomOutToMax()
-	self.zoomTimer = nil
+	self.zoomTimer = nil -- Clear stale reference; timer has already fired by the time we get here
 	if not MinimapAutoZoomDB.combat and InCombatLockdown() then
 		self.pendingZoomOut = true
 		return
@@ -106,8 +99,9 @@ function MAZ:StartZoomTimer()
 		self.zoomTimer:Cancel()
 		self.zoomTimer = nil
 	end
+	-- Only entry point that creates zoomTimer; cancels any pending timer before replacing it
 	self.zoomTimer = C_Timer.NewTimer(MinimapAutoZoomDB.delay, function()
-		MAZ:ZoomOutToMax()
+		MAZ:ZoomOutToMax() -- Called only from here; timer is expired on entry
 	end)
 end
 
@@ -132,9 +126,8 @@ function MAZ:InitializeZoomHooks()
 	end)
 end
 
---#endregion
-
---#region Settings Panel
+MAZ:SetScript("OnEvent", MAZ.OnEvent)
+MAZ:RegisterEvent("ADDON_LOADED")
 
 function MAZ:InitializeOptions()
 	local category = Settings.RegisterVerticalLayoutCategory(MAZ.name)
@@ -163,5 +156,3 @@ end
 SLASH_MAZ1 = "/maz"
 SLASH_MAZ2 = "/minimapautozoom"
 SlashCmdList["MAZ"] = MAZ_Settings
-
---#endregion
