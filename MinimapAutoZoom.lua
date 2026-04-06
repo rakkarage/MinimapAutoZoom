@@ -37,18 +37,22 @@ function MAZ:ADDON_LOADED(event, name)
 end
 
 function MAZ:PLAYER_REGEN_DISABLED()
+	-- When entering combat: if combat zooming is disabled, cancel any pending
+	-- auto-zoom and mark that we need to zoom out when combat ends.
 	if not MinimapAutoZoomDB.combat then
 		if self.zoomTimer then
 			self.zoomTimer:Cancel()
 			self.zoomTimer = nil
 		end
 		if Minimap:GetZoom() > 0 then
+			-- Mark as pending: zoom will resume after combat when PLAYER_REGEN_ENABLED fires
 			self.pendingZoomOut = true
 		end
 	end
 end
 
 function MAZ:PLAYER_REGEN_ENABLED()
+	-- When exiting combat: resume zoom timer if minimap was zoomed or if it was paused during combat
 	if self.pendingZoomOut or Minimap:GetZoom() > 0 then
 		self.pendingZoomOut = false
 		self:StartZoomTimer()
