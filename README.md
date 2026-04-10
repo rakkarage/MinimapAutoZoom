@@ -16,5 +16,5 @@ This allows a fully zoomed out minimap to become the new default state.
     - Options->AddOns menu
     - Addon Compartment menu
     - Type: `/maz`
-  - Set the delay (default: 3 seconds)
+  - Set the delay (default: 7 seconds)
 - Zoom in on the minimap; it will automatically zoom out after the delay

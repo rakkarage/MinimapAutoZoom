@@ -1,4 +1,4 @@
--- MinimapAutoZoom: Auto-zooms minimap back out after configurable delay
+-- 🗺️ MinimapAutoZoom: Automatically zooms out the minimap after a configurable delay.
 
 local addonName, ns = ...
 
