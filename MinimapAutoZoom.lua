@@ -12,7 +12,7 @@ MAZ.pendingZoomOut = false
 MAZ.zoneChangeTimer = nil
 
 function MAZ:OnEvent(event, ...)
-	if self[event] then self[event](self, event, ...) end
+	if self[event] then self[event](self, ...) end
 end
 
 function MAZ:ADDON_LOADED(event, name)
