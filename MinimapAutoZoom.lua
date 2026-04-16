@@ -59,10 +59,10 @@ end
 
 function MAZ:InitializeZoomHooks()
 	hooksecurefunc(Minimap, "SetZoom", function()
-		MAZ:OnMinimapZoomChanged()
+		self:OnMinimapZoomChanged()
 	end)
-	Minimap:HookScript("OnMouseWheel", function(_, delta)
-		C_Timer.After(0.1, function() MAZ:OnMinimapZoomChanged() end)
+	Minimap:HookScript("OnMouseWheel", function()
+		C_Timer.After(0.1, function() self:OnMinimapZoomChanged() end)
 	end)
 end
 
@@ -113,11 +113,11 @@ end)
 MAZ:RegisterEvent("ADDON_LOADED")
 
 function MAZ:InitializeOptions()
-	local category = Settings.RegisterVerticalLayoutCategory(MAZ.name)
-	MAZ.category = category
+	local category = Settings.RegisterVerticalLayoutCategory(self.name)
+	self.category = category
 
 	local delaySetting = Settings.RegisterAddOnSetting(category,
-		"MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Zoom-Out Delay", MAZ.defaults.delay)
+		"MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Zoom-Out Delay", self.defaults.delay)
 	local delayOptions = Settings.CreateSliderOptions(0.1, 30, 0.1)
 	delayOptions:SetLabelFormatter(
 		MinimalSliderWithSteppersMixin.Label.Right,
@@ -126,7 +126,7 @@ function MAZ:InitializeOptions()
 	Settings.CreateSlider(category, delaySetting, delayOptions, "How long after zooming in before the minimap resets.")
 
 	local combatSetting = Settings.RegisterAddOnSetting(category,
-		"MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Allow in Combat", MAZ.defaults.combat)
+		"MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Allow in Combat", self.defaults.combat)
 	Settings.CreateCheckbox(category, combatSetting, "Zoom out automatically while in combat.")
 
 	Settings.RegisterAddOnCategory(category)
