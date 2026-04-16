@@ -11,69 +11,6 @@ MAZ.zoomTimer = nil
 MAZ.pendingZoomOut = false
 MAZ.zoneChangeTimer = nil
 
-function MAZ:OnEvent(event, ...)
-	if self[event] then self[event](self, ...) end
-end
-
-function MAZ:ADDON_LOADED(event, name)
-	if name ~= self.name then return end
-
-	MinimapAutoZoomDB = MinimapAutoZoomDB or {}
-	for key, value in pairs(self.defaults) do
-		if MinimapAutoZoomDB[key] == nil then
-			MinimapAutoZoomDB[key] = value
-		end
-	end
-
-	self:InitializeOptions()
-	self:InitializeZoomHooks()
-	self:RegisterEvent("PLAYER_REGEN_DISABLED")
-	self:RegisterEvent("PLAYER_REGEN_ENABLED")
-	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-	self:RegisterEvent("ZONE_CHANGED")
-
-	self:UnregisterEvent(event)
-end
-
-function MAZ:PLAYER_REGEN_DISABLED()
-	-- When entering combat: if combat zooming is disabled, cancel any pending
-	-- auto-zoom and mark that we need to zoom out when combat ends.
-	if not MinimapAutoZoomDB.combat then
-		if self.zoomTimer then
-			self.zoomTimer:Cancel()
-			self.zoomTimer = nil
-		end
-		if Minimap:GetZoom() > 0 then
-			-- Mark as pending: zoom will resume after combat when PLAYER_REGEN_ENABLED fires
-			self.pendingZoomOut = true
-		end
-	end
-end
-
-function MAZ:PLAYER_REGEN_ENABLED()
-	-- When exiting combat: resume zoom timer if minimap was zoomed or if it was paused during combat
-	if self.pendingZoomOut or Minimap:GetZoom() > 0 then
-		self.pendingZoomOut = false
-		self:StartZoomTimer()
-	end
-end
-
-function MAZ:PLAYER_ENTERING_WORLD()
-	C_Timer.After(1, function()
-		MAZ.pendingZoomOut = false
-		MAZ:OnMinimapZoomChanged()
-	end)
-end
-
-function MAZ:ZONE_CHANGED_NEW_AREA()
-	self:OnZoneChanged()
-end
-
-function MAZ:ZONE_CHANGED()
-	self:OnZoneChanged()
-end
-
 function MAZ:OnZoneChanged()
 	if self.zoneChangeTimer then
 		self.zoneChangeTimer:Cancel()
@@ -85,7 +22,7 @@ function MAZ:OnZoneChanged()
 end
 
 function MAZ:ZoomOutToMax()
-	self.zoomTimer = nil -- Clear stale reference; timer has already fired by the time we get here
+	self.zoomTimer = nil
 	if not MinimapAutoZoomDB.combat and InCombatLockdown() then
 		self.pendingZoomOut = true
 		return
@@ -103,9 +40,8 @@ function MAZ:StartZoomTimer()
 		self.zoomTimer:Cancel()
 		self.zoomTimer = nil
 	end
-	-- Only entry point that creates zoomTimer; cancels any pending timer before replacing it
 	self.zoomTimer = C_Timer.NewTimer(MinimapAutoZoomDB.delay, function()
-		MAZ:ZoomOutToMax() -- Called only from here; timer is expired on entry
+		MAZ:ZoomOutToMax()
 	end)
 end
 
@@ -130,7 +66,49 @@ function MAZ:InitializeZoomHooks()
 	end)
 end
 
-MAZ:SetScript("OnEvent", MAZ.OnEvent)
+MAZ:SetScript("OnEvent", function(self, event, name)
+	if event == "ADDON_LOADED" then
+		if name ~= self.name then return end
+
+		MinimapAutoZoomDB = MinimapAutoZoomDB or {}
+		for key, value in pairs(self.defaults) do
+			if MinimapAutoZoomDB[key] == nil then
+				MinimapAutoZoomDB[key] = value
+			end
+		end
+
+		self:InitializeOptions()
+		self:InitializeZoomHooks()
+		self:RegisterEvent("PLAYER_REGEN_DISABLED")
+		self:RegisterEvent("PLAYER_REGEN_ENABLED")
+		self:RegisterEvent("PLAYER_ENTERING_WORLD")
+		self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+		self:RegisterEvent("ZONE_CHANGED")
+		self:UnregisterEvent(event)
+	elseif event == "PLAYER_REGEN_DISABLED" then
+		if not MinimapAutoZoomDB.combat then
+			if self.zoomTimer then
+				self.zoomTimer:Cancel()
+				self.zoomTimer = nil
+			end
+			if Minimap:GetZoom() > 0 then
+				self.pendingZoomOut = true
+			end
+		end
+	elseif event == "PLAYER_REGEN_ENABLED" then
+		if self.pendingZoomOut or Minimap:GetZoom() > 0 then
+			self.pendingZoomOut = false
+			self:StartZoomTimer()
+		end
+	elseif event == "PLAYER_ENTERING_WORLD" then
+		C_Timer.After(1, function()
+			self.pendingZoomOut = false
+			self:OnMinimapZoomChanged()
+		end)
+	elseif event == "ZONE_CHANGED_NEW_AREA" or event == "ZONE_CHANGED" then
+		self:OnZoneChanged()
+	end
+end)
 MAZ:RegisterEvent("ADDON_LOADED")
 
 function MAZ:InitializeOptions()
