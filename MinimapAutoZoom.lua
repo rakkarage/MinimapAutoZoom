@@ -66,8 +66,9 @@ function MAZ:InitializeZoomHooks()
 	end)
 end
 
-MAZ:SetScript("OnEvent", function(self, event, name)
+MAZ:SetScript("OnEvent", function(self, event, ...)
 	if event == "ADDON_LOADED" then
+		local name = ...
 		if name ~= self.name then return end
 
 		MinimapAutoZoomDB = MinimapAutoZoomDB or {}
