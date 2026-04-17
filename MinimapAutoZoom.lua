@@ -119,10 +119,7 @@ function MAZ:InitializeOptions()
 	local delaySetting = Settings.RegisterAddOnSetting(category,
 		"MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Zoom-Out Delay", self.defaults.delay)
 	local delayOptions = Settings.CreateSliderOptions(0.1, 30, 0.1)
-	delayOptions:SetLabelFormatter(
-		MinimalSliderWithSteppersMixin.Label.Right,
-		function(value) return string.format("%.1f sec", value) end
-	)
+	delayOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value) return string.format("%.1f sec", value) end)
 	Settings.CreateSlider(category, delaySetting, delayOptions, "How long after zooming in before the minimap resets.")
 
 	local combatSetting = Settings.RegisterAddOnSetting(category,
@@ -133,7 +130,9 @@ function MAZ:InitializeOptions()
 end
 
 function MAZ_Settings()
-	if not InCombatLockdown() then Settings.OpenToCategory(MAZ.category:GetID()) end
+	if not InCombatLockdown() then
+		Settings.OpenToCategory(MAZ.category:GetID())
+	end
 end
 
 SLASH_MAZ1 = "/maz"
