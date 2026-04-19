@@ -7,9 +7,9 @@ local frame = CreateFrame("Frame")
 local defaults = { delay = 7, combat = true }
 
 local category
-local zoomTimer = nil
+local zoomTimer
 local pendingZoomOut = false
-local zoneChangeTimer = nil
+local zoneChangeTimer
 
 local function OnZoneChanged()
 	if zoneChangeTimer then
