@@ -1,46 +1,46 @@
 -- 🗺️ MinimapAutoZoom: Automatically zooms out the minimap after a configurable delay.
 
-local addonName = ...
+local _addonName = ...
 
-local frame = CreateFrame("Frame")
+local _frame = CreateFrame("Frame")
 
-local defaults = { delay = 7, combat = true }
+local _defaults = { delay = 7, combat = true }
 
-local category
-local zoomTimer
-local pendingZoomOut = false
-local zoneChangeTimer
+local _category
+local _zoomTimer
+local _pendingZoomOut = false
+local _zoneChangeTimer
 
 local function OnZoneChanged()
-	if zoneChangeTimer then
-		zoneChangeTimer:Cancel()
+	if _zoneChangeTimer then
+		_zoneChangeTimer:Cancel()
 	end
-	zoneChangeTimer = C_Timer.NewTimer(0.5, function()
-		zoneChangeTimer = nil
+	_zoneChangeTimer = C_Timer.NewTimer(0.5, function()
+		_zoneChangeTimer = nil
 		OnMinimapZoomChanged()
 	end)
 end
 
 local function ZoomOutToMax()
-	zoomTimer = nil
+	_zoomTimer = nil
 	if not MinimapAutoZoomDB.combat and InCombatLockdown() then
-		pendingZoomOut = true
+		_pendingZoomOut = true
 		return
 	end
-	pendingZoomOut = false
+	_pendingZoomOut = false
 	Minimap:SetZoom(0)
 end
 
 local function StartZoomTimer()
 	if not MinimapAutoZoomDB.combat and InCombatLockdown() then
-		pendingZoomOut = true
+		_pendingZoomOut = true
 		return
 	end
-	if zoomTimer then
-		zoomTimer:Cancel()
-		zoomTimer = nil
+	if _zoomTimer then
+		_zoomTimer:Cancel()
+		_zoomTimer = nil
 	end
-	zoomTimer = C_Timer.NewTimer(MinimapAutoZoomDB.delay, function()
+	_zoomTimer = C_Timer.NewTimer(MinimapAutoZoomDB.delay, function()
 		ZoomOutToMax()
 	end)
 end
@@ -49,11 +49,11 @@ function OnMinimapZoomChanged()
 	if Minimap:GetZoom() > 0 then
 		StartZoomTimer()
 	else
-		if zoomTimer then
-			zoomTimer:Cancel()
-			zoomTimer = nil
+		if _zoomTimer then
+			_zoomTimer:Cancel()
+			_zoomTimer = nil
 		end
-		pendingZoomOut = false
+		_pendingZoomOut = false
 	end
 end
 
@@ -67,29 +67,29 @@ local function InitializeZoomHooks()
 end
 
 local function InitializeOptions()
-	category = Settings.RegisterVerticalLayoutCategory(addonName)
+	_category = Settings.RegisterVerticalLayoutCategory(_addonName)
 
-	local delaySetting = Settings.RegisterAddOnSetting(category,
-		"MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Zoom-Out Delay", defaults.delay)
+	local delaySetting = Settings.RegisterAddOnSetting(_category,
+		"MAZ_Delay", "delay", MinimapAutoZoomDB, Settings.VarType.Number, "Zoom-Out Delay", _defaults.delay)
 	local delayOptions = Settings.CreateSliderOptions(0.1, 30, 0.1)
 	delayOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value) return string.format("%.1f sec", value) end)
-	Settings.CreateSlider(category, delaySetting, delayOptions, "How long after zooming in before the minimap resets.")
+	Settings.CreateSlider(_category, delaySetting, delayOptions, "How long after zooming in before the minimap resets.")
 
-	local combatSetting = Settings.RegisterAddOnSetting(category,
-		"MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Allow in Combat", defaults.combat)
-	Settings.CreateCheckbox(category, combatSetting, "Zoom out automatically while in combat.")
+	local combatSetting = Settings.RegisterAddOnSetting(_category,
+		"MAZ_Combat", "combat", MinimapAutoZoomDB, Settings.VarType.Boolean, "Allow in Combat", _defaults.combat)
+	Settings.CreateCheckbox(_category, combatSetting, "Zoom out automatically while in combat.")
 
-	Settings.RegisterAddOnCategory(category)
+	Settings.RegisterAddOnCategory(_category)
 end
 
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(self, event, ...)
+_frame:RegisterEvent("ADDON_LOADED")
+_frame:SetScript("OnEvent", function(self, event, ...)
 	if event == "ADDON_LOADED" then
 		local name = ...
-		if name ~= addonName then return end
+		if name ~= _addonName then return end
 
 		MinimapAutoZoomDB = MinimapAutoZoomDB or {}
-		for key, value in pairs(defaults) do
+		for key, value in pairs(_defaults) do
 			if MinimapAutoZoomDB[key] == nil then
 				MinimapAutoZoomDB[key] = value
 			end
@@ -105,22 +105,22 @@ frame:SetScript("OnEvent", function(self, event, ...)
 		self:UnregisterEvent(event)
 	elseif event == "PLAYER_REGEN_DISABLED" then
 		if not MinimapAutoZoomDB.combat then
-			if zoomTimer then
-				zoomTimer:Cancel()
-				zoomTimer = nil
+			if _zoomTimer then
+				_zoomTimer:Cancel()
+				_zoomTimer = nil
 			end
 			if Minimap:GetZoom() > 0 then
-				pendingZoomOut = true
+				_pendingZoomOut = true
 			end
 		end
 	elseif event == "PLAYER_REGEN_ENABLED" then
-		if pendingZoomOut or Minimap:GetZoom() > 0 then
-			pendingZoomOut = false
+		if _pendingZoomOut or Minimap:GetZoom() > 0 then
+			_pendingZoomOut = false
 			StartZoomTimer()
 		end
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		C_Timer.After(1, function()
-			pendingZoomOut = false
+			_pendingZoomOut = false
 			OnMinimapZoomChanged()
 		end)
 	elseif event == "ZONE_CHANGED_NEW_AREA" or event == "ZONE_CHANGED" then
@@ -129,8 +129,8 @@ frame:SetScript("OnEvent", function(self, event, ...)
 end)
 
 function MAZ_Settings()
-	if not InCombatLockdown() and category then
-		Settings.OpenToCategory(category:GetID())
+	if not InCombatLockdown() and _category then
+		Settings.OpenToCategory(_category:GetID())
 	end
 end
 
